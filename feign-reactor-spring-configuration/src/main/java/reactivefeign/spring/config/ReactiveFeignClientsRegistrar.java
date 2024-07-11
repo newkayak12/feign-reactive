@@ -189,6 +189,8 @@ class ReactiveFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 			alias = qualifier;
 		}
 
+		//REFACTOR Add OBJECT_TYPE_ATTRIBUTE
+		beanDefinition.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, ClassUtils.resolveClassName(className, (ClassLoader)null));
 		BeanDefinitionHolder holder = new BeanDefinitionHolder(beanDefinition, className,
 				new String[] { alias });
 		BeanDefinitionReaderUtils.registerBeanDefinition(holder, registry);

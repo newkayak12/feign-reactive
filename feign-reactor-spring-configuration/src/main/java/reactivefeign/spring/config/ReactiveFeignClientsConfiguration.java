@@ -19,6 +19,7 @@ package reactivefeign.spring.config;
 
 import feign.Contract;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -65,7 +66,8 @@ public class ReactiveFeignClientsConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public Contract reactiveFeignContract(
-			List<AnnotatedParameterProcessor> parameterProcessors, FormattingConversionService feignConversionService) {
+			//REFACTOR : Qualifier
+			List<AnnotatedParameterProcessor> parameterProcessors, @Qualifier("feign-conversion-service") FormattingConversionService feignConversionService) {
 		return new SpringMvcContract(parameterProcessors, feignConversionService);
 	}
 
@@ -84,7 +86,8 @@ public class ReactiveFeignClientsConfiguration {
 		return new DefaultReactiveLogger(Clock.systemUTC());
 	}
 
-	@Bean
+	//REFACTOR : ADD beanName
+	@Bean(name = "feign-conversion-service")
 	public FormattingConversionService feignConversionService() {
 		FormattingConversionService conversionService = new DefaultFormattingConversionService();
 		for (FeignFormatterRegistrar feignFormatterRegistrar : feignFormatterRegistrars) {
@@ -130,8 +133,7 @@ public class ReactiveFeignClientsConfiguration {
 
 			@Bean
 			@Scope("prototype")
-			public ReactiveFeignBuilder reactiveFeignBuilder(
-					WebClient.Builder builder,
+			public ReactiveFeignBuilder reactiveFeignBuilder(WebClient.Builder builder,
 					@Autowired(required = false) WebClientFeignCustomizer webClientCustomizer) {
 				return webClientCustomizer != null
 						? WebReactiveFeign.builder(builder, webClientCustomizer)
