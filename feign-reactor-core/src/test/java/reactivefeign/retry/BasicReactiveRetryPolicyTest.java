@@ -67,8 +67,7 @@ public class BasicReactiveRetryPolicyTest {
                 new Date(currentTime + delay), request), 1);
         assertThat(retryDelay).isEqualTo(delay);
 
-        retryDelay = retryPolicy.retryDelay(new RetryableException(-1, "error msg", Request.HttpMethod.GET,
-                null, request), 1);
+        retryDelay = retryPolicy.retryDelay(new RetryableException(-1, "error msg", Request.HttpMethod.GET, null, 0L, request), 1);
         assertThat(retryDelay).isEqualTo(backoff);
     }
 
