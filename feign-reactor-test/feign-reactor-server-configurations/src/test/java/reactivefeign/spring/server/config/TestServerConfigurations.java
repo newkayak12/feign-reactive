@@ -1,8 +1,7 @@
 package reactivefeign.spring.server.config;
 
+
 import io.undertow.UndertowOptions;
-import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
-import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.ServerConnector;
 import org.springframework.boot.web.embedded.jetty.JettyReactiveWebServerFactory;
 import org.springframework.boot.web.embedded.undertow.UndertowReactiveWebServerFactory;
@@ -11,6 +10,8 @@ import org.springframework.boot.web.server.Http2;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import wiremock.org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
+import wiremock.org.eclipse.jetty.server.HttpConfiguration;
 
 import static java.util.Collections.singleton;
 
@@ -36,7 +37,7 @@ public class TestServerConfigurations {
                 httpConfig.setIdleTimeout(0);
                 HTTP2CServerConnectionFactory http2CFactory = new HTTP2CServerConnectionFactory(httpConfig);
                 http2CFactory.setMaxConcurrentStreams(1000);
-                sc.addConnectionFactory(http2CFactory);
+//                sc.addConnectionFactory(http2CFactory);
             }));
             return jettyReactiveWebServerFactory;
         }
