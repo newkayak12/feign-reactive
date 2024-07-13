@@ -14,10 +14,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.http2.client.HTTP2Client;
-import org.eclipse.jetty.http2.client.http.HttpClientTransportOverHTTP2;
-import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
+import org.eclipse.jetty.http2.client.transport.HttpClientTransportOverHTTP2;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactivefeign.java11.Java11ReactiveFeign;
@@ -29,10 +29,12 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static reactivefeign.benchmarks.BenchmarkUtils.readJsonFromFile;
 import static reactivefeign.benchmarks.BenchmarkUtils.readJsonFromFileAsBytes;
@@ -159,27 +161,41 @@ abstract public class RealRequestBenchmarks {
     }
 
     private Server jettyH2c(int port){
-        Server serverJetty = new Server();
+        Server serverJetty = new Server(port);
 
-        serverJetty.setHandler(new AbstractHandler(){
+//        serverJetty.setHandler(new AbstractHandler(){
+//            @Override
+//            public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException {
+//                request.getInputStream().skip(Integer.MAX_VALUE);
+//                if(target.equals(PATH_WITH_PAYLOAD)){
+//                    response.addHeader("Content-Type", "application/json");
+//                    response.getOutputStream().write(responseJson);
+//                    response.getOutputStream().flush();
+//                }
+//                baseRequest.setHandled(true);
+//            }
+//        });
+
+
+        serverJetty.setHandler(new AbstractHandler() {
             @Override
-            public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException {
-                request.getInputStream().skip(Integer.MAX_VALUE);
-                if(target.equals(PATH_WITH_PAYLOAD)){
-                    response.addHeader("Content-Type", "application/json");
-                    response.getOutputStream().write(responseJson);
-                    response.getOutputStream().flush();
+            public boolean handle(Request request, Response response, Callback callback) throws Exception {
+                request.read().skip(Integer.MAX_VALUE);
+                callback.succeeded();
+                if(request.getContext().getContextPath().equals(PATH_WITH_PAYLOAD)) {
+                    response.getHeaders().add("Content-Type", "application/json");
+                    ByteBuffer buffer = ByteBuffer.wrap(responseJson);
+                    response.write(true, buffer, callback);
                 }
-                baseRequest.setHandled(true);
+
+
+                return true;
             }
         });
 
         //setup h2c
         HttpConfiguration httpConfig = new HttpConfiguration();
-        ServerConnector connectorH2c = new ServerConnector(serverJetty,
-                new HttpConnectionFactory(httpConfig),
-                new HTTP2CServerConnectionFactory(httpConfig)
-                );
+        ServerConnector connectorH2c = new ServerConnector(serverJetty, new HttpConnectionFactory(httpConfig));
         connectorH2c.setPort(port);
         serverJetty.addConnector(connectorH2c);
 

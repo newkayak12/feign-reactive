@@ -23,9 +23,9 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import feign.MethodMetadata;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.http.HttpFields;
-import org.eclipse.jetty.reactive.client.ContentChunk;
+import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.reactive.client.ReactiveRequest;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.*;
@@ -38,6 +38,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -122,12 +123,14 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 
 		return Mono.<ReactiveHttpResponse>from(requestBuilder.build().response((response, content) -> Mono.just(
 				new JettyReactiveHttpResponse(request, response.getResponse(),
-						postProcess(content,
-								(contentChunk, throwable) -> {
+						postProcess(content, (contentChunk, throwable) -> {
+
 									if(throwable != null){
-										contentChunk.callback.failed(throwable);
+//										contentChunk.callback.failed(throwable);
+										contentChunk.getFailure();
 									} else {
-										contentChunk.callback.succeeded();
+//										contentChunk.callback.succeeded();
+										contentChunk.getByteBuffer();
 									}
 								}),
 						returnPublisherClass, returnActualClass,
@@ -139,6 +142,7 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 						return new ReactiveFeignException(ex, request);
 					}
 				});
+
 	}
 
 	protected void setUpHeaders(ReactiveHttpRequest request, HttpFields.Mutable httpHeaders) {
@@ -167,7 +171,7 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 	}
 
 	protected ReactiveRequest.Content provideBody(ReactiveHttpRequest request) {
-		Publisher<ContentChunk> bodyPublisher;
+		Publisher<Content.Chunk> bodyPublisher;
 		String contentType;
 		if(request.body() instanceof SerializedFormData){
 			bodyPublisher =  Mono.just(toByteBufferChunk(((SerializedFormData)request.body()).getFormData()));
@@ -203,17 +207,19 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 		return ReactiveRequest.Content.fromPublisher(bodyPublisher, contentType);
 	}
 
-	protected ContentChunk toByteBufferChunk(Object data){
-		return new ContentChunk((ByteBuffer)data);
+	protected Content.Chunk toByteBufferChunk(Object data){
+//		return new ContentChunk((ByteBuffer)data);
+		return Content.Chunk.from((ByteBuffer)data, true);
 	}
 
-	protected ContentChunk toCharSequenceChunk(Object data){
+	protected Content.Chunk toCharSequenceChunk(Object data){
 		CharBuffer charBuffer = CharBuffer.wrap((CharSequence) data);
 		ByteBuffer byteBuffer = UTF_8.encode(charBuffer);
-		return new ContentChunk(byteBuffer);
+//		return new ContentChunk(byteBuffer);
+		return Content.Chunk.from(byteBuffer, true);
 	}
 
-	protected ContentChunk toJsonChunk(Object data, boolean stream){
+	protected Content.Chunk toJsonChunk(Object data, boolean stream){
 		try {
 			ByteArrayBuilder byteArrayBuilder = new ByteArrayBuilder();
 			bodyWriter.writeValue(byteArrayBuilder, data);
@@ -221,7 +227,8 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 				byteArrayBuilder.write(NEWLINE_SEPARATOR);
 			}
 			ByteBuffer buffer = ByteBuffer.wrap(byteArrayBuilder.toByteArray());
-			return new ContentChunk(buffer);
+//			return new ContentChunk(buffer);
+			return Content.Chunk.from(buffer, true);
 		} catch (java.io.IOException e) {
 			throw new UncheckedIOException(e);
 		}

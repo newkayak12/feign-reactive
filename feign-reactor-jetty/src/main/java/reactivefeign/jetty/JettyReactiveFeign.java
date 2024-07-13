@@ -17,9 +17,8 @@ import com.fasterxml.jackson.core.async_.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpProxy;
-import org.eclipse.jetty.http3.client.HTTP3Client;
-import org.eclipse.jetty.http3.client.transport.HttpClientTransportOverHTTP3;
-import org.eclipse.jetty.quic.client.ClientQuicConfiguration;
+import org.eclipse.jetty.http2.client.HTTP2Client;
+import org.eclipse.jetty.http2.client.transport.HttpClientTransportOverHTTP2;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
@@ -36,35 +35,31 @@ import javax.net.ssl.SSLServerSocketFactory;
 public final class JettyReactiveFeign {
 
     private JettyReactiveFeign(){}
-//FIXME
 
-//    public static <T> Builder<T> builder() {
-//
-//        return builder(useHttp3 -> {
-//            try {
-//                if(useHttp3){
-//
-////previous
-//////                    HTTP2Client h2Client = new HTTP2Client();
-//////                    h2Client.setSelectors(1);
-//////                    HttpClientTransportOverHTTP2 transport = new HttpClientTransportOverHTTP2(h2Client);
-//
-//                    HTTP3Client http3Client = new HTTP3Client(new ClientQuicConfiguration(SSLServerSocketFactory.getDefault()));
-//                    HttpClientTransportOverHTTP3 transport = new HttpClientTransportOverHTTP3(http3Client);
-//
-//                    HttpClient httpClient = new HttpClient(transport);
-//                    httpClient.start();
-//                    return httpClient;
-//                } else {
-//                    HttpClient httpClient = new HttpClient();
-//                    httpClient.start();
-//                    return httpClient;
-//                }
-//            } catch (Exception e) {
-//                throw new RuntimeException(e);
-//            }
-//        });
-//    }
+    public static <T> Builder<T> builder() {
+
+        return builder(useHttp2 -> {
+            try {
+                if(useHttp2){
+
+                    HTTP2Client h2Client = new HTTP2Client();
+                    h2Client.setSelectors(1);
+                    HttpClientTransportOverHTTP2 transport = new HttpClientTransportOverHTTP2(h2Client);
+
+
+                    HttpClient httpClient = new HttpClient(transport);
+                    httpClient.start();
+                    return httpClient;
+                } else {
+                    HttpClient httpClient = new HttpClient();
+                    httpClient.start();
+                    return httpClient;
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
 
     public static <T> Builder<T> builder(HttpClient httpClient) {
         return builder(useHttp2 -> httpClient);
@@ -108,10 +103,8 @@ public final class JettyReactiveFeign {
             boolean useHttp2 = ReactiveOptions.useHttp2(options);
             HttpClient httpClient = httpClientFactory.build(useHttp2);
 
-//            if(useHttp2 && !(httpClient.getTransport() instanceof HttpClientTransportOverHTTP2)){
-            if(useHttp2 && !(httpClient.getTransport() instanceof HttpClientTransportOverHTTP3)){
-//                throw new IllegalArgumentException("HttpClient should use HttpClientTransportOverHTTP2");
-                throw new IllegalArgumentException("HttpClient should use HttpClientTransportOverHTTP3");
+            if(useHttp2 && !(httpClient.getTransport() instanceof HttpClientTransportOverHTTP2)){
+                throw new IllegalArgumentException("HttpClient should use HttpClientTransportOverHTTP2");
             }
 
             if (this.options != null && this.options.getConnectTimeoutMillis() != null) {

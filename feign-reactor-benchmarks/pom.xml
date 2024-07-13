@@ -12,7 +12,7 @@
     <artifactId>feign-reactor-benchmarks</artifactId>
 
     <properties>
-        <java.version>11</java.version>
+        <java.version>17</java.version>
         <jmh.version>1.37</jmh.version>
     </properties>
 
@@ -51,18 +51,14 @@
         </dependency>
 
         <dependency>
-            <groupId>org.eclipse.jetty.http2</groupId>
-            <artifactId>http2-client</artifactId>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-client</artifactId>
+            <version>${jetty.version}</version>
         </dependency>
-
         <dependency>
-            <groupId>org.eclipse.jetty.http2</groupId>
-            <artifactId>http2-http-client-transport</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.jetty.http2</groupId>
-            <artifactId>http2-server</artifactId>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <version>${jetty.version}</version>
         </dependency>
 
         <dependency>

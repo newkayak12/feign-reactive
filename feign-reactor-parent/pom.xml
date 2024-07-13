@@ -18,17 +18,19 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--BOMs-->
-        <spring-cloud-bom.version>2022.0.4</spring-cloud-bom.version>
-        <spring-boot-dependencies-bom.version>3.0.1</spring-boot-dependencies-bom.version>
+        <spring-cloud-bom.version>2023.0.0</spring-cloud-bom.version>
+        <spring-boot-dependencies-bom.version>3.2.4</spring-boot-dependencies-bom.version>
 
         <!--other-->
         <json-reactor.version>0.0.4</json-reactor.version>
         <rxjava.version>1.3.8</rxjava.version>
         <rxjava2.version>2.2.21</rxjava2.version>
+        <jetty.version>12.0.9</jetty.version>
+
 
         <!-- Tests -->
         <junit.version>4.13.2</junit.version>
-        <wiremock.version>2.35.0</wiremock.version>
+        <wiremock.version>3.3.1</wiremock.version>
         <awaitility.version>4.2.0</awaitility.version>
         <blockhound.version>1.0.8.RELEASE</blockhound.version>
         <disruptor.version>3.4.4</disruptor.version>
@@ -176,10 +178,9 @@
             </dependency>
 
             <dependency>
-                <groupId>com.github.tomakehurst</groupId>
-                <artifactId>wiremock-jre8-standalone</artifactId>
+                <groupId>org.wiremock</groupId>
+                <artifactId>wiremock-standalone</artifactId>
                 <version>${wiremock.version}</version>
-                <scope>test</scope>
             </dependency>
 
             <!--Needed for tracking blocking calls in reactive application https://github.com/reactor/BlockHound -->
